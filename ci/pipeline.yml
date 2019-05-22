@@ -10,12 +10,10 @@ resources:
 - name: kubernetes-resource-image
   type: docker-image
   source:
-    repository: harbor.ellin.net:443/library/kubernetes-resource
-    username: jeff
-    password: ((harbor.password))
-    insecure_registries:
-      - harbor.ellin.net:443
-
+    repository: ellinj/pks-resource
+    username: ((docker.email))
+    password: ((docker.password))
+  
 jobs:
 - name: build-kubernetes-resource-image
   public: true
