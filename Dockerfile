@@ -21,5 +21,10 @@ RUN set -x && \
 
 COPY --from=0 /go/bin/aws-iam-authenticator /usr/local/bin/
 
+COPY \
+       bin/pks \
+       /usr/local/bin/
+
+
 RUN mkdir -p /opt/resource
 COPY assets/* /opt/resource/

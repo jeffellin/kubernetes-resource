@@ -11,139 +11,28 @@ setup_kubectl() {
   local payload
   payload=$1
 
-  # the entry name for auth of kubeconfig
-  local -r AUTH_NAME=auth
-  # the entry name for cluster of kubeconfig
-  local -r CLUSTER_NAME=cluster
-  # the entry name for context of kubeconfig
-  local -r CONTEXT_NAME=kubernetes-resource
+  local pks_endpoint
+  pks_endpoint="$(jq -r '.source.pks_endpoint // ""' < "$payload")"
+  
+  local pks_user
+  pks_endpoint="$(jq -r '.source.pks_user // ""' < "$payload")"
+  
 
-  KUBECONFIG="$(mktemp "$TMPDIR/kubernetes-resource-kubeconfig.XXXXXX")"
-  export KUBECONFIG
+  local pks_password
+  pks_cluster="$(jq -r '.source.pks_password // ""' < "$payload")"
+  
 
-  # Optional. The path of kubeconfig file
-  local kubeconfig_file
-  kubeconfig_file="$(jq -r '.params.kubeconfig_file // ""' < "$payload")"
-  # Optional. The content of kubeconfig
-  local kubeconfig
-  kubeconfig="$(jq -r '.source.kubeconfig // ""' < "$payload")"
-
-  if [[ -n "$kubeconfig_file"  ]]; then
-    if [[ ! -f "$kubeconfig_file" ]]; then
-      echoerr "kubeconfig file '$kubeconfig_file' does not exist"
-      exit 1
-    fi
-
-    cat "$kubeconfig_file" > "$KUBECONFIG"
-  elif [[ -n "$kubeconfig" ]]; then
-    echo "$kubeconfig" > "$KUBECONFIG"
-  else
-    # Optional. The address and port of the API server. Requires token.
-    local server
-    server="$(jq -r '.source.server // ""' < "$payload")"
-    # Optional. A certificate file for the certificate authority.
-    local certificate_authority
-    certificate_authority="$(jq -r '.source.certificate_authority // ""' < "$payload")"
-    # Optional. If true, the API server's certificate will not be checked for
-    # validity. This will make your HTTPS connections insecure. Defaults to false.
-    local insecure_skip_tls_verify
-    insecure_skip_tls_verify="$(jq -r '.source.insecure_skip_tls_verify // ""' < "$payload")"
-
-    # Build options for kubectl config set-cluster
-    local set_cluster_opts
-    set_cluster_opts=("--server=$server")
-    if [[ -n "$certificate_authority" ]]; then
-      local ca_file
-      ca_file=$(mktemp "$TMPDIR/kubernetes-resource-ca_file.XXXXXX")
-      echo -e "$certificate_authority" > "$ca_file"
-      set_cluster_opts+=("--certificate-authority=$ca_file")
-    fi
-    if [[ "$insecure_skip_tls_verify" == "true" ]]; then
-      set_cluster_opts+=("--insecure-skip-tls-verify")
-    fi
-    exe kubectl config set-cluster "$CLUSTER_NAME" "${set_cluster_opts[@]}"
-
-    exe kubectl config set-context "$CONTEXT_NAME" --cluster="$CLUSTER_NAME" --user "$AUTH_NAME"
-
-    exe kubectl config use-context "$CONTEXT_NAME"
-
-    # Optional. Use the AWS EKS authenticator
-    local use_aws_iam_authenticator
-    use_aws_iam_authenticator="$(jq -r '.source.use_aws_iam_authenticator // ""' < "$payload")"
-    local aws_eks_cluster_name
-    aws_eks_cluster_name="$(jq -r '.source.aws_eks_cluster_name // ""' < "$payload")"
-    local aws_eks_assume_role
-    aws_eks_assume_role="$(jq -r '.source.aws_eks_assume_role // ""' < "$payload")"
-    if [[ "$aws_eks_assume_role" ]]; then
-      aws_eks_assume_role="- -r
-      - ${aws_eks_assume_role}"
-    fi
-    if [[ "$use_aws_iam_authenticator" == "true" ]]; then
-      if [ -z "$aws_eks_cluster_name" ]; then
-        echoerr 'You must specify aws_eks_cluster_name when using aws_iam_authenticator.'
-        exit 1
-      fi
-      local kubeconfig_file_aws
-      kubeconfig_file_aws="$(mktemp "$TMPDIR/kubernetes-resource-kubeconfig-aws.XXXXXX")"
-      cat <<EOF > "$kubeconfig_file_aws"
-users:
-- name: ${AUTH_NAME}
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      args:
-      - token
-      - -i
-      - ${aws_eks_cluster_name}
-      ${aws_eks_assume_role}
-      command: aws-iam-authenticator
-      env: null
-EOF
-      # Merge two kubeconfig files
-      local tmpfile
-      tmpfile="$(mktemp)"
-      KUBECONFIG="$KUBECONFIG:$kubeconfig_file_aws" kubectl config view --flatten > "$tmpfile"
-      cat "$tmpfile" > "$KUBECONFIG"
-    fi
-  fi
-
-  # Optional. The namespace scope. Defaults to default if doesn't specify in kubeconfig.
-  local namespace
-  namespace="$(jq -r '.params.namespace // ""' < "$payload")"
-  if [[ -z "$namespace" ]]; then
-    # Optional. The namespace scope. Defaults to `default`. If set along with `kubeconfig`, `namespace` will override the namespace in the current-context
-    namespace="$(jq -r '.source.namespace // ""' < "$payload")"
-  fi
-  if [[ -n "$namespace" ]]; then
-    exe kubectl config set-context "$(kubectl config current-context)" --namespace="$namespace"
-  fi
-
-  # if providing a token we set a user and override context to support both kubeconfig and generated config
-  local token
-  token="$(jq -r '.source.token // ""' < "$payload")"
-  if [[ -n "$token" ]]; then
-    # Build options for kubectl config set-credentials
-    # Avoid to expose the token string by using placeholder
-    local set_credentials_opts
-    set_credentials_opts=("--token=**********")
-    exe kubectl config set-credentials "$AUTH_NAME" "${set_credentials_opts[@]}"
-    # placeholder is replaced with actual token string
-    sed -i -e "s/[*]\\{10\\}/$token/" "$KUBECONFIG"
-
-    # override user of context to one with token
-    exe kubectl config set-context "$(kubectl config current-context)" --user="$AUTH_NAME"
-  fi
-
-  # Optional. The name of the kubeconfig context to use.
-  local context
-  context="$(jq -r '.source.context // ""' < "$payload")"
-  if [[ -n "$context" ]]; then
-    exe kubectl config use-context "$context"
-  fi
-
+  local pks_cluster
+  pks_endpoint="$(jq -r '.source.pks_cluster // ""' < "$payload")"
+  
+  
+  
   # Display the client and server version information
   exe kubectl version
-
+  exe pks --version
+ 
+  exe pks login -a ${pks_endpoint} -u ${pks_user} -p ${pks_password} -k
+  exe pks get-credentials ${pks_cluster}
   # Ignore the error from `kubectl cluster-info`. From v1.9.0, this command
   # fails if it cannot find the cluster services.
   # See https://github.com/kubernetes/kubernetes/commit/998f33272d90e4360053d64066b9722288a25aae
