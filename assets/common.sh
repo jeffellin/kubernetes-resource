@@ -15,24 +15,27 @@ setup_kubectl() {
   pks_endpoint="$(jq -r '.source.pks_endpoint // ""' < "$payload")"
   
   local pks_user
-  pks_endpoint="$(jq -r '.source.pks_user // ""' < "$payload")"
+  pks_user="$(jq -r '.source.pks_user // ""' < "$payload")"
   
 
   local pks_password
-  pks_cluster="$(jq -r '.source.pks_password // ""' < "$payload")"
+  pks_password="$(jq -r '.source.pks_password // ""' < "$payload")"
   
 
   local pks_cluster
-  pks_endpoint="$(jq -r '.source.pks_cluster // ""' < "$payload")"
+  pks_cluster="$(jq -r '.source.pks_cluster // ""' < "$payload")"
   
   
   
   # Display the client and server version information
-  exe kubectl version
-  exe pks --version
+
  
   exe pks login -a ${pks_endpoint} -u ${pks_user} -p ${pks_password} -k
   exe pks get-credentials ${pks_cluster}
+
+  exe kubectl version
+  exe pks --version
+
   # Ignore the error from `kubectl cluster-info`. From v1.9.0, this command
   # fails if it cannot find the cluster services.
   # See https://github.com/kubernetes/kubernetes/commit/998f33272d90e4360053d64066b9722288a25aae
