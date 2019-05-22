@@ -6,13 +6,6 @@ A PKS resource for applying updates to a kubernetes cluster
 
 Initial Release
 
-### Building
-Currently the container for this repo does not exist in a public repo. The Dockerfile is supplied so you can build and push it to your local Docker registry.
-
-```
-docker build . -t harbor.ellin.net/library/kubernetes-resource 
-docker push harbor.ellin.net/library/kubernetes-resource:latest
-```
 
 ## Source Configuration
 
@@ -58,10 +51,8 @@ resource_types:
 - name: kubernetes
   type: docker-image
   source:
-    repository: harbor.ellin.net:443/library/kubernetes-resource
+    repository: ellinj/pks-resource
     tag: "latest"
-    insecure_registries:
-    - harbor.ellin.net:443
 
 resources:
 - name: kubernetes-production
