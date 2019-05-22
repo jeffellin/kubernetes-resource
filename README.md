@@ -1,53 +1,30 @@
-# kubernetes-resource
+# pks-resource
 
-[![Build Status](https://travis-ci.org/zlabjp/kubernetes-resource.svg?branch=master)](https://travis-ci.org/zlabjp/kubernetes-resource)
-
-A Concourse resource for controlling the Kubernetes cluster.
+A PKS resource for applying updates to a kubernetes cluster
 
 *This resource supports AWS EKS.*
 
 ## Versions
 
-The version of this resource corresponds to the version of kubectl. We recommend using different version depending on the kubernetes version of the cluster.
-
- - `zlabjp/kubernetes-resource:1.14` ([stable-1.14](https://storage.googleapis.com/kubernetes-release/release/stable-1.14.txt))
- - `zlabjp/kubernetes-resource:1.13` ([stable-1.13](https://storage.googleapis.com/kubernetes-release/release/stable-1.13.txt))
- - `zlabjp/kubernetes-resource:1.12` ([stable-1.12](https://storage.googleapis.com/kubernetes-release/release/stable-1.12.txt))
- - `zlabjp/kubernetes-resource:latest` ([latest](https://storage.googleapis.com/kubernetes-release/release/latest.txt))
+Initial Release
 
 ## Source Configuration
 
-### kubeconfig
-
-- `kubeconfig`: *Optional.* A kubeconfig file.
-    ```yaml
-    kubeconfig: |
-      apiVersion: v1
-      clusters:
-      - cluster:
-        ...
-    ```
-- `context`: *Optional.* The context to use when specifying a `kubeconfig` or `kubeconfig_file`
-
 ### cluster configs
 
-- `server`: *Optional.* The address and port of the API server.
-- `token`: *Optional.* Bearer token for authentication to the API server.
+- `pks_endpoint`: The address and port of the API server for PKS.
+- `pks_user`: Username to authenticate to PKS API.
+- `pks_password`: Password to authenticate to PKS API.
+- `pks_cluster`: Name of the cluster to deploy to.
 - `namespace`: *Optional.* The namespace scope. Defaults to `default`. If set along with `kubeconfig`, `namespace` will override the namespace in the current-context
-- `certificate_authority`: *Optional.* A certificate file for the certificate authority.
+- `certificate_authority`: *TODO.* A certificate file for the certificate authority. Currently ssl validation is disabled when talking to the PKS API endpoint.
     ```yaml
     certificate_authority: |
         -----BEGIN CERTIFICATE-----
         ...
         -----END CERTIFICATE-----
     ```
-- `insecure_skip_tls_verify`: *Optional.* If true, the API server's certificate will not be checked for validity. This will make your HTTPS connections insecure. Defaults to `false`.
-- `use_aws_iam_authenticator`: *Optional.* If true, the aws_iam_authenticator, required for connecting with EKS, is used. Requires `aws_eks_cluster_name`. Defaults to `false`.
-- `aws_eks_cluster_name`: *Optional.* the AWS EKS cluster name, required when `use_aws_iam_authenticator` is true.
-- `aws_eks_assume_role`: *Optional.* the AWS IAM role ARN to assume.
-- `aws_access_key_id`: *Optional.* AWS access key to use for iam authenticator.
-- `aws_secret_access_key`: *Optional.* AWS secret key to use for iam authenticator.
-- `aws_session_token`: *Optional.* AWS session token (assumed role) to use for iam authenticator.
+- `insecure_skip_tls_verify`: *TODO.* If true, the API server's certificate will not be checked for validity. This will make your HTTPS connections insecure. Defaults to `false`. Currently always skips validation.
 
 ## Behavior
 
@@ -66,7 +43,6 @@ Control the Kubernetes cluster like `kubectl apply`, `kubectl delete`, `kubectl 
 - `wait_until_ready`: *Optional.* The number of seconds that waits until all pods are ready. 0 means don't wait. Defaults to `30`.
 - `wait_until_ready_interval`: *Optional.* The interval (sec) on which to check whether all pods are ready. Defaults to `3`.
 - `wait_until_ready_selector`: *Optional.* [A label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) to identify a set of pods which to check whether those are ready. Defaults to every pods in the namespace.
-- `kubeconfig_file`: *Optional.* The path of kubeconfig file. This param has priority over the `kubeconfig` of source configuration.
 - `namespace`: *Optional.* The namespace scope. It will override the namespace in other params and source configuration.
 
 ## Example
@@ -76,17 +52,20 @@ resource_types:
 - name: kubernetes
   type: docker-image
   source:
-    repository: zlabjp/kubernetes-resource
-    tag: "1.14"
+    repository: harbor.ellin.net:443/library/kubernetes-resource
+    tag: "latest"
+    insecure_registries:
+    - harbor.ellin.net:443
 
 resources:
 - name: kubernetes-production
   type: kubernetes
   source:
-    server: https://192.168.99.100:8443
+    pks_endpoint: ((PKS_ENDPOINT))
+    pks_user: ((PKS_USER))
+    pks_password: ((PKS_PASSWORD))
+    pks_cluster: ((PKS_CLUSTER))
     namespace: production
-    token: {{kubernetes-production-token}}
-    certificate_authority: {{kubernetes-production-cert}}
 - name: my-app
   type: git
   source:
