@@ -8,6 +8,14 @@ A PKS resource for applying updates to a kubernetes cluster
 
 Initial Release
 
+### Building
+currently the dockerfile for this repo does not exist in a public repo. Please build and push the dockerfile to your docker registry before proceeding.
+
+```
+docker build . -t harbor.ellin.net/library/kubernetes-resource 
+docker push harbor.ellin.net/library/kubernetes-resource:latest
+```
+
 ## Source Configuration
 
 ### cluster configs
@@ -96,39 +104,6 @@ jobs:
       wait_until_ready_selector: run=nginx
 ```
 
-### Use a remote kubeconfig file fetched by s3-resource
-
-```yaml
-resources:
-- name: k8s-prod
-  type: kubernetes
-
-- name: kubeconfig-file
-  type: s3
-  source:
-    bucket: mybucket
-    versioned_file: config
-    access_key_id: ((s3-access-key))
-    secret_access_key: ((s3-secret))
-
-- name: my-app
-  type: git
-  source:
-    ...
-
-jobs:
-- name: k8s-deploy-prod
-  plan:
-  - aggregate:
-    - get: my-app
-      trigger: true
-    - get: kubeconfig-file
-  - put: k8s-prod
-    params:
-      kubectl: apply -f my-app/k8s -f my-app/k8s/production
-      wait_until_ready_selector: app=myapp
-      kubeconfig_file: kubeconfig-file/config
-```
 
 ## License
 
