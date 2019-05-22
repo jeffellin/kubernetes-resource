@@ -2,14 +2,12 @@
 
 A PKS resource for applying updates to a kubernetes cluster
 
-*This resource supports AWS EKS.*
-
 ## Versions
 
 Initial Release
 
 ### Building
-currently the dockerfile for this repo does not exist in a public repo. Please build and push the dockerfile to your docker registry before proceeding.
+Currently the container for this repo does not exist in a public repo. The Dockerfile is supplied so you can build and push it to your local Docker registry.
 
 ```
 docker build . -t harbor.ellin.net/library/kubernetes-resource 
