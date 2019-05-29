@@ -4,8 +4,9 @@ A PKS resource for applying updates to a kubernetes cluster
 
 ## Versions
 
-Initial Release
-
+Initial Release 1.0.0
+  * PKS CLI version: 1.4.0-build.194
+  * Helm Client: v2.12.1
 
 ## Source Configuration
 
