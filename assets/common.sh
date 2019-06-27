@@ -24,22 +24,33 @@ setup_kubectl() {
 
   local pks_cluster
   pks_cluster="$(jq -r '.source.pks_cluster // ""' < "$payload")"
-  
-  
-  
-  # Display the client and server version information
 
- 
+  # Display the client and server version information
+  
   exe pks login -a ${pks_endpoint} -u ${pks_user} -p ${pks_password} -k
   exe pks get-credentials ${pks_cluster}
 
   exe kubectl version
   exe pks --version
 
+  # set namespace
+  local namespace
+  namespace="$(jq -r '.params.namespace // ""' < "$payload")"
+  
+  if [[ -n "$namespace" ]]; then
+    exe kubectl config set-context "$(kubectl config current-context)" --namespace="$namespace"
+  fi
+
+
   # Ignore the error from `kubectl cluster-info`. From v1.9.0, this command
   # fails if it cannot find the cluster services.
   # See https://github.com/kubernetes/kubernetes/commit/998f33272d90e4360053d64066b9722288a25aae
   exe kubectl cluster-info 2>/dev/null ||:
+
+
+
+
+
 }
 
 # current_namespace outputs the current namespace.
