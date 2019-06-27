@@ -10,7 +10,7 @@ resources:
   - name: source-code
     type: git
     source:
-      uri: git@github.com:jeffellin/pks-resource.git
+      uri: git@github.com:jeffellin/kubernetes-resource.git
       branch: master
       private_key: ((private_key))
   - name: kubernetes-production

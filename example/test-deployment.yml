@@ -12,7 +12,6 @@ metadata:
   labels:
     app: my-nginx
   name: my-nginx
-  namespace: default
   resourceVersion: "570125"
   selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/my-nginx
   uid: 7dfab222-9934-11e9-9666-005056bab09e
