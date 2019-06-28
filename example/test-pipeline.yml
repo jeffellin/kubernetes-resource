@@ -5,7 +5,6 @@ resource_types:
     repository: harbor.ellin.net:443/library/pks-resource
     insecure_registries: [ "harbor.ellin.net:443" ]
     imagePullPolicy: Always
-    tag: "latest"
 resources:
   - name: source-code
     type: git
@@ -29,5 +28,6 @@ jobs:
       - put: kubernetes-production
         params:
           kubectl: apply -f source-code/example/test-deployment.yml
+          namespace: metallb-system
           wait_until_ready_selector: app=my-nginx
 

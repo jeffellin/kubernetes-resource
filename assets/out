@@ -6,7 +6,7 @@
 # For the full copyright and license information, please view the LICENSE
 # file that was distributed with this source code.
 
-set -ex
+set -e
 set -o pipefail
 
 exec 3>&1 # make stdout available as fd 3 for the result

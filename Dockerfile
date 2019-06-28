@@ -1,4 +1,16 @@
-FROM pivotalservices/pks-kubectl
+FROM pivotalservices/pks-kubectl as base
+
+
+FROM alpine
+
+RUN apk add --update \
+    curl \
+    git \
+    bash \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=base /usr/local/bin /usr/local/bin
+
 ENV VERSION=2.12.1
 ENV BASE_URL="https://storage.googleapis.com/kubernetes-helm"
 ENV TAR_FILE="helm-v${VERSION}-linux-amd64.tar.gz"
